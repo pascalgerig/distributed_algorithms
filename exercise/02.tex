@@ -1,0 +1,191 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 02
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{2.1 Pizza or Pasta}
+    
+        Events:
+        \begin{enumerate}
+            \item A cook asking Alice to hand him max. `count` jobs: <Cook, getJob | count>
+            \item Alice telling a cook which jobs to do: <Alice, deliverJob | jobs, Cook>
+            \item A customer ordering a dish: <Customer, orderDish | menu>
+            \item A cook handing a dish back to Alice: <Cook, returnDish | menu>
+            \item Alice serving the `menu` to the `customer`: <Alice, serveDish | menu, Customer>
+            \item Loops the cook to prepare all dishes: <Cook, prepareDish | >
+        \end{enumerate}
+
+        Properties:
+        \begin{enumerate}
+            \item every customer will eventually get his/her order
+            \item no dish is delivered if it was not ordered  
+            \item every customer gets each order exactly once
+        \end{enumerate}
+
+        Module Alice:
+
+Init
+  bufferBob <- Empty
+  bufferCarol <- Empty
+  bufferOrders <- Empty
+
+upon <Bob, getJob | count> do
+  if count < 3
+    while bufferBob == Empty
+      //Wait
+
+    jobs <- max. first count elements of bufferBob
+    trigger <Alice, deliverJob | jobs, Bob>
+
+upon <Carol, getJob | count> do
+  if count < 7
+    while bufferCarol == Empty
+      //Wait
+
+    jobs <- max. first count elements of bufferCarol
+    trigger <Alice, deliverJob | jobs, Carol>
+
+upon <Customer, orderDish | menu> do
+  bufferOrders <- bufferOrders U (Customer, menu)
+  if menu == pasta
+    bufferCarol <- bufferCarol U menu
+  else
+    bufferBob <- bufferBob U menu
+
+upon <Bob, returnDish | menu> do
+  Customer <- customer from a tuple of bufferOrders such that tupels menu equals param menu
+  trigger <Alice, serveDish | menu, Customer>
+
+upon <Carol, returnDish | menu> do
+  Customer <- customer from a tuple of bufferOrders such that tupels menu equals param menu
+  trigger <Alice, serveDish | menu, Customer>
+
+
+
+Module Bob:
+Init
+  buffer <- Empty
+  getJobInProgress <- false
+  trigger <Bob, prepareDish | >
+
+upon <Alice, deliverJob | job, Bob> do
+  getJobInProgress <- false
+  buffer <- buffer U job
+
+upon <Bob, prepareDish | > do
+  while true
+    if |buffer| < 3 \& !getJobInProgress
+      getJobInProgress <- true
+      trigger <Carol, getJob | 3 - |buffer|>
+
+    while buffer == Empty
+      //wait
+
+    order <- firstElement of buffer
+    prepare meal with order
+    trigger <Bob, retrunDish | menu>
+
+
+
+
+Module Carol:
+Init
+  buffer <- Empty
+  getJobInProgress <- false
+  trigger <Carol, prepareDish | >
+
+
+upon <Alice, deliverJob | job, Carol> do
+  getJobInProgress <- false
+  buffer <- buffer U job
+
+upon <Carol, prepareDish | > do
+  while true
+    if |buffer| < 7 \& !getJobInProgress
+      getJobInProgress <- true
+      trigger <Carol, getJob | 7 - |buffer|>
+
+    while buffer == Empty
+      //wait
+
+    order <- firstElement of buffer
+    prepare meal with order
+    trigger <Carol, retrunDish | menu>
+
+
+	\newpage
+	\section*{2.2 Safety and liveness}
+    \begin{adjustwidth}{2em}{2em}
+        Definition Safety Property:\\
+        If a property P has been violated in some execution E, then there exists a prefix E' of E such that in every extension
+        of E', the property P is violated.
+        \\ \\
+        Definition Liveness Property:\\
+        Property P can be satisfied by some extension E' of a given execution E\\
+
+        
+		\begin{enumerate}[(a)]
+			\item \textit{If some general attacks at time $t$, then the other general attacks at the same time.} \\
+			\textit{\textbf{safety property}} $\rightarrow$ if we asume the property was violated as described in ex. b), then every extension of an execution up to the point where m2 is delivered after t, will result in A attacking after B and not at the same time 
+			\item \textit{If $m_2$ arrives after time $t$, then General A attack after General B.} \\
+			\textit{\textbf{safety property}} $\rightarrow$ descirbes a violation of the property described in a), see argumentation in a)
+			\item \textit{Eventually, General B will attack.} \\
+            \textit{\textbf{liveness property}}$\rightarrow$ given any partially completed execution E were both messages were delivered, we can always extend E to E', such that this property will hold.
+            \textit{\textbf{safetry property}}$\rightarrow$ fiven an prefix of an execution, where m1 is not delivered, then both Generals (and in paritcular B) will not attack in any extension of the prefix\\
+            $\rightarrow$ \textit{\textbf{mixture}}
+			\item \textit{If messenegers $m_1$ and $m_2$ are not intercepted, then eventually both generals attack.} \\
+			\textit{\textbf{liveness property}}$\rightarrow$ given an Execution E were m1 and m2 were not intercepted and arrived at the receiver, then we can extend E to E' such that both Generals will have launched their Attack.
+			\item \textit{If $m_1$ and $m_2$ are not intercepted, then eventually both generals attack at time $t$.} \\
+			\textit{\textbf{mixture}}$\rightarrow$ combination of a), because both should attack at same time and d), because both should eventually attack.
+		\end{enumerate}			
+	\end{adjustwidth}
+	
+	\section*{2.3 Unreliable clocks}
+	\begin{adjustwidth}{2em}{2em}
+		\begin{enumerate}[(a)]
+			\item \textit{Find two examples, where timing issues lead to safety violations.} \\
+            \begin{enumerate}[\textbullet]
+                \item General problem, but generals use clocks synchronized with NTP, a firewall blocks connection from NTP server to one generals clock, therefor his time is wrong -> even though they do everything correctly, the won't attack at the same time due to wrong time on one clock.
+                \item Assume we have a protocol that calculates some value per time, for instance cost per time of an action. Lets assume this protocol uses a time of day clock.
+                Due to a synchronization issue with the NTP server, the time jumps back such that the start time of the calculation equals the end time of the calculation.
+                At this point every extension of the described execution will divide by zero causing the protocol to crash.
+            \end{enumerate}
+			\item \textit{Find two examples, where timing issues lead to liveness volations.} \\
+			\begin{enumerate}[\textbullet]
+                \item Online shooter, two players are in a battle, player A tries to shoot player B. The server evaluates actions with the given timestamp from each player. if clock of player A is too different from clock of server, then A can hit his oponent on his screen, but the server thinks A missed B, therefor A will not be able to kill player B even though he should be.
+                \item Assume a system where the user can change the hardware time and sets it to 1.1.1970 00:00, this will lead to a timestamp of 0. If the system performs operations assuming the timestamp to be a positiv number, it might end up in an infinite loop, not leading to progress at all.
+                Fun fact: older iphones had a similar issue
+            \end{enumerate}
+		\end{enumerate}			
+	\end{adjustwidth}
+\end{document}
