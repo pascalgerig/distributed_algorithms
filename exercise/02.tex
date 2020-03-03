@@ -52,95 +52,103 @@
             \item every customer gets each order exactly once
         \end{enumerate}
 
-        Module Alice:
 
-Init
-  bufferBob <- Empty
-  bufferCarol <- Empty
-  bufferOrders <- Empty
-
-upon <Bob, getJob | count> do
-  if count < 3
-    while bufferBob == Empty
-      //Wait
-
-    jobs <- max. first count elements of bufferBob
-    trigger <Alice, deliverJob | jobs, Bob>
-
-upon <Carol, getJob | count> do
-  if count < 7
-    while bufferCarol == Empty
-      //Wait
-
-    jobs <- max. first count elements of bufferCarol
-    trigger <Alice, deliverJob | jobs, Carol>
-
-upon <Customer, orderDish | menu> do
-  bufferOrders <- bufferOrders U (Customer, menu)
-  if menu == pasta
-    bufferCarol <- bufferCarol U menu
-  else
-    bufferBob <- bufferBob U menu
-
-upon <Bob, returnDish | menu> do
-  Customer <- customer from a tuple of bufferOrders such that tupels menu equals param menu
-  trigger <Alice, serveDish | menu, Customer>
-
-upon <Carol, returnDish | menu> do
-  Customer <- customer from a tuple of bufferOrders such that tupels menu equals param menu
-  trigger <Alice, serveDish | menu, Customer>
-
-
-
-Module Bob:
-Init
-  buffer <- Empty
-  getJobInProgress <- false
-  trigger <Bob, prepareDish | >
-
-upon <Alice, deliverJob | job, Bob> do
-  getJobInProgress <- false
-  buffer <- buffer U job
-
-upon <Bob, prepareDish | > do
-  while true
-    if |buffer| < 3 \& !getJobInProgress
-      getJobInProgress <- true
-      trigger <Carol, getJob | 3 - |buffer|>
-
-    while buffer == Empty
-      //wait
-
-    order <- firstElement of buffer
-    prepare meal with order
-    trigger <Bob, retrunDish | menu>
-
-
-
-
-Module Carol:
-Init
-  buffer <- Empty
-  getJobInProgress <- false
-  trigger <Carol, prepareDish | >
-
-
-upon <Alice, deliverJob | job, Carol> do
-  getJobInProgress <- false
-  buffer <- buffer U job
-
-upon <Carol, prepareDish | > do
-  while true
-    if |buffer| < 7 \& !getJobInProgress
-      getJobInProgress <- true
-      trigger <Carol, getJob | 7 - |buffer|>
-
-    while buffer == Empty
-      //wait
-
-    order <- firstElement of buffer
-    prepare meal with order
-    trigger <Carol, retrunDish | menu>
+        \begin{adjustwidth}{-3em}{}
+          \begin{tabular}{lllll}
+            \begin{tabular}{|p{9cm}|}
+              \hline
+              \textbf{Module \textsc{Alice}:} \\
+              \hline
+              \underline{Init:} \\
+              \ \ $\textit{bufferBob} \ = \ \emptyset$ \\
+              \ \ $\textit{bufferCarol} \ = \ \emptyset$ \\
+              \ \ $\textit{pizzaBuffer} \ = \ \emptyset$ \\
+              \ \ $\textit{bufferOrders} \ = \ \emptyset$ \\
+              \\
+              \underline{upon} $\langle \textit{Bob, getJob} \mid \textsc{count} \rangle$ \underline{do}\\
+              \ \ \underline{if} count < 3
+              \ \ \ \underline{while} ($bufferBob == \emptyset$) \{\} \\
+              \ \ \ $\textit{jobs} \leftarrow max. first count elements of bufferBob$ \\
+              \ \ \ trigger $\langle \textit{Alice, deliverJob} \mid jobs, Bob \rangle$ \\
+              \\
+              \underline{upon} $\langle \textit{Carol, getJob} \mid \textsc{count} \rangle$ \underline{do}\\
+              \ \ \underline{if} count < 7 \\
+              \ \ \ \underline{while} ($bufferCarol == \emptyset$) \{\} \\
+              \ \ \ $\textit{jobs} \leftarrow max. first count elements of bufferCarol$ \\
+              \ \ \ trigger $\langle \textit{Alice, deliverJob} \mid jobs, Carol \rangle$ \\
+              \\
+              \underline{upon} $\langle \textit{Customer, orderDish} \mid \textit{menu} \rangle$ \underline{do} \\
+              \ \ $\textit{bufferOrders} \leftarrow bufferOrders \cup (Customer, menu)$ \\
+              \ \ \underline{if} (\textit{menu} == pasta) \\
+              \ \ \ \ $\textit{bufferCarol} \leftarrow bufferCarol \cup menu$ \\
+              \ \ \underline{else} \\
+              \ \ \ \ $\textit{bufferBob} \leftarrow bufferBob \cup menu$ \\
+              \\
+              \underline{upon} $\langle \textit{Bob, returnDish} \mid \textit{menu} \rangle$ \underline{do} \\
+              \ \ $\textit{customer} \leftarrow customer from a tuple of bufferOrders such that tupels menu equals param menu$ \\
+              \ \ trigger $\langle \textit{Alice, serveDish} \mid \textit{menu, customer} \rangle$ \\
+              \\
+              \underline{upon} $\langle \textit{Carole, returnDish} \mid \textit{menu} \rangle$ \underline{do} \\
+              \ \ $\textit{customer} \leftarrow customer from a tuple of bufferOrders such that tupels menu equals param menu$ \\
+              \ \ trigger $\langle \textit{Alice, serveDish} \mid \textit{menu, customer} \rangle$ \\
+              \hline
+            \end{tabular}
+            &
+            &
+            \begin{tabular}{l}
+              \begin{tabular}{|l|}
+                \hline
+                \textbf{Module \textsc{Bob}:} \\
+                \hline
+                \underline{Init:} \\
+                \ \ $\textit{buffer} \ = \ \emptyset$ \\
+                \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ trigger $\langle \textit{Bob, prepareDish} \mid \textit{} \rangle$ \\
+                \\
+                \underline{upon} $\langle \textit{Alice, deliverJob} \mid \textit{job, Bob} \rangle$ \underline{do} \\
+                \ \ $\textit{getJobInProgress} \ = \ true$ \\
+                \ \ $\textit{buffer} \leftarrow buffer \cup job$ \\
+                \\
+                \underline{upon} $\langle \textit{Bob, prepareDish} \mid \textit{} \rangle$ \underline{do} \\
+                \ \ while (true) \\
+                \ \ \ \underline{if} $|buffer| < 3 \ \& \ !getJobInProgress$ \\
+                \ \ \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ \ \ trigger $\langle \textit{Carol, getJob} \mid \textit{3 - |buffer|} \rangle$ \\
+                \ \ \ while ($\textit{buffer} \ == \ \emptyset$) \{\} \\
+                \ \ \ $\textit{order} \leftarrow firstElement \ of \ \textit{buffer}$\\
+                \ \ \ prepare meal with order\\
+                \ \ \ trigger $\langle \textit{Carol, retrunDish} \mid \textit{menu} \rangle$ \\
+                \hline
+              \end{tabular}
+              \\
+              \\
+              \begin{tabular}{|l|}
+                \hline
+                \textbf{Module \textsc{Carol}:} \\
+                \hline
+                \underline{Init:} \\
+                \ \ $\textit{buffer} \ = \ \emptyset$ \\
+                \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ trigger $\langle \textit{Carol, prepareDish} \mid \textit{} \rangle$ \\
+                \\
+                \underline{upon} $\langle \textit{Alice, deliverJob} \mid \textit{job, Carol} \rangle$ \underline{do} \\
+                \ \ $\textit{getJobInProgress} \ = \ true$ \\
+                \ \ $\textit{buffer} \leftarrow buffer \cup job$ \\
+                \\
+                \underline{upon} $\langle \textit{Carol, prepareDish} \mid \textit{} \rangle$ \underline{do} \\
+                \ \ while (true) \\
+                \ \ \ \underline{if} $|buffer| < 7 \ \& \ !getJobInProgress$ \\
+                \ \ \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ \ \ trigger $\langle \textit{Carol, getJob} \mid \textit{7 - |buffer|} \rangle$ \\
+                \ \ \ while ($\textit{buffer} \ == \ \emptyset$) \{\} \\
+                \ \ \ $\textit{order} \leftarrow firstElement \ of \ \textit{buffer}$\\
+                \ \ \ prepare meal with order\\
+                \ \ \ trigger $\langle \textit{Carol, retrunDish} \mid \textit{menu} \rangle$ \\
+                \hline
+              \end{tabular}
+            \end{tabular}
+          \end{tabular}			
+        \end{adjustwidth}
 
 
 	\newpage
