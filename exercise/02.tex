@@ -44,7 +44,6 @@
             \item Alice serving the `menu` to the `customer`: <Alice, serveDish | menu, Customer>
             \item Loops the cook to prepare all dishes: <Cook, prepareDish | >
         \end{enumerate}
-
         Properties:
         \begin{enumerate}
             \item every customer will eventually get his/her order
@@ -62,19 +61,18 @@
               \underline{Init:} \\
               \ \ $\textit{bufferBob} \ = \ \emptyset$ \\
               \ \ $\textit{bufferCarol} \ = \ \emptyset$ \\
-              \ \ $\textit{pizzaBuffer} \ = \ \emptyset$ \\
               \ \ $\textit{bufferOrders} \ = \ \emptyset$ \\
               \\
               \underline{upon} $\langle \textit{Bob, getJob} \mid \textsc{count} \rangle$ \underline{do}\\
-              \ \ \underline{if} count < 3
+              \ \ \underline{if} count < 3 \\
               \ \ \ \underline{while} ($bufferBob == \emptyset$) \{\} \\
-              \ \ \ $\textit{jobs} \leftarrow max. first count elements of bufferBob$ \\
+              \ \ \ $\textit{jobs} \leftarrow \textit{max. first count elements of bufferBob}$ \\
               \ \ \ trigger $\langle \textit{Alice, deliverJob} \mid jobs, Bob \rangle$ \\
               \\
               \underline{upon} $\langle \textit{Carol, getJob} \mid \textsc{count} \rangle$ \underline{do}\\
               \ \ \underline{if} count < 7 \\
               \ \ \ \underline{while} ($bufferCarol == \emptyset$) \{\} \\
-              \ \ \ $\textit{jobs} \leftarrow max. first count elements of bufferCarol$ \\
+              \ \ \ $\textit{jobs} \leftarrow \textit{max. first count elements of bufferCarol}$ \\
               \ \ \ trigger $\langle \textit{Alice, deliverJob} \mid jobs, Carol \rangle$ \\
               \\
               \underline{upon} $\langle \textit{Customer, orderDish} \mid \textit{menu} \rangle$ \underline{do} \\
@@ -85,11 +83,13 @@
               \ \ \ \ $\textit{bufferBob} \leftarrow bufferBob \cup menu$ \\
               \\
               \underline{upon} $\langle \textit{Bob, returnDish} \mid \textit{menu} \rangle$ \underline{do} \\
-              \ \ $\textit{customer} \leftarrow customer from a tuple of bufferOrders such that tupels menu equals param menu$ \\
+              \ \ $\textit{customer} \leftarrow \textit{customer from a tuple of bufferOrders such}$ \\
+              \ \ \ \ \ \ $\textit{that tupels menu equals param menu}$ \\
               \ \ trigger $\langle \textit{Alice, serveDish} \mid \textit{menu, customer} \rangle$ \\
               \\
               \underline{upon} $\langle \textit{Carole, returnDish} \mid \textit{menu} \rangle$ \underline{do} \\
-              \ \ $\textit{customer} \leftarrow customer from a tuple of bufferOrders such that tupels menu equals param menu$ \\
+              \ \ $\textit{customer} \leftarrow \textit{customer from a tuple of bufferOrders such}$ \\
+              \ \ \ \ \ \ $\textit{that tupels menu equals param menu}$ \\
               \ \ trigger $\langle \textit{Alice, serveDish} \mid \textit{menu, customer} \rangle$ \\
               \hline
             \end{tabular}
@@ -106,13 +106,13 @@
                 \ \ trigger $\langle \textit{Bob, prepareDish} \mid \textit{} \rangle$ \\
                 \\
                 \underline{upon} $\langle \textit{Alice, deliverJob} \mid \textit{job, Bob} \rangle$ \underline{do} \\
-                \ \ $\textit{getJobInProgress} \ = \ true$ \\
+                \ \ $\textit{getJobInProgress} \ = \ false$ \\
                 \ \ $\textit{buffer} \leftarrow buffer \cup job$ \\
                 \\
                 \underline{upon} $\langle \textit{Bob, prepareDish} \mid \textit{} \rangle$ \underline{do} \\
                 \ \ while (true) \\
                 \ \ \ \underline{if} $|buffer| < 3 \ \& \ !getJobInProgress$ \\
-                \ \ \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ \ \ $\textit{getJobInProgress} \ = \ true$ \\
                 \ \ \ \ trigger $\langle \textit{Carol, getJob} \mid \textit{3 - |buffer|} \rangle$ \\
                 \ \ \ while ($\textit{buffer} \ == \ \emptyset$) \{\} \\
                 \ \ \ $\textit{order} \leftarrow firstElement \ of \ \textit{buffer}$\\
@@ -132,13 +132,13 @@
                 \ \ trigger $\langle \textit{Carol, prepareDish} \mid \textit{} \rangle$ \\
                 \\
                 \underline{upon} $\langle \textit{Alice, deliverJob} \mid \textit{job, Carol} \rangle$ \underline{do} \\
-                \ \ $\textit{getJobInProgress} \ = \ true$ \\
+                \ \ $\textit{getJobInProgress} \ = \ false$ \\
                 \ \ $\textit{buffer} \leftarrow buffer \cup job$ \\
                 \\
                 \underline{upon} $\langle \textit{Carol, prepareDish} \mid \textit{} \rangle$ \underline{do} \\
                 \ \ while (true) \\
                 \ \ \ \underline{if} $|buffer| < 7 \ \& \ !getJobInProgress$ \\
-                \ \ \ \ $\textit{getJobInProgress} \ = \ false$ \\
+                \ \ \ \ $\textit{getJobInProgress} \ = \ true$ \\
                 \ \ \ \ trigger $\langle \textit{Carol, getJob} \mid \textit{7 - |buffer|} \rangle$ \\
                 \ \ \ while ($\textit{buffer} \ == \ \emptyset$) \{\} \\
                 \ \ \ $\textit{order} \leftarrow firstElement \ of \ \textit{buffer}$\\
