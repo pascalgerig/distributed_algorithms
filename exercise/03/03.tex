@@ -1,0 +1,121 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 03
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{3.1 Relations among failure detectors}
+        Idea: If a process detects a failed process with NPFD, we broadcast this information to all other alive processes.\\
+        \\
+        \begin{tabular}{ccccc}
+        \begin{tabular}{|p{40em}|}
+            \hline
+            \underline{Init:} \\
+            \ \ start timer $\Delta$ \\
+            \ \ $\textit{alive} \ = \ \Pi$ \\
+            \ \ $\textit{detected} \ = \ \emptyset$ \\
+            \\
+            \underline{upon} \textit{timeout} \underline{do}\\
+            \ \ \underline{for} all $p \ \in \ \textit{alive}$ \\
+            \ \ \ \underline{if} \textit{p} failed in last \textit{NPFD} run \\
+            \ \ \ \ trigger $\langle \textit{NPFD, detectedFailure} \mid p \rangle$ \\
+            \ \ restart timer $\Delta$\\
+            \ \ run \textit{NPFD}\\
+            \\
+            \underline{upon} $\langle \textit{NPFD, detectedFailure} \mid \textsc{failedProcess} \rangle$ \underline{do}\\
+            \ \ $\textit{alive} \ \leftarrow \ \textit{alive} \ \setminus \ \textit{failedProcess}$ \\
+            \ \ $\textit{detected} \ \leftarrow \ \textit{detected} \ \cup \ \textit{failedProcess}$ \\
+            \hline
+        \end{tabular}
+        \end{tabular}			
+
+
+    \section*{3.2 Perfect Failure Detector}
+    \begin{enumerate}[(a)]
+        \item \underline{Implementation:} \\
+        \begin{tabular}{lllll}
+            \begin{tabular}{p{17cm}}
+                %\hline
+                \underline{Init:} \\
+                \ \ $\textit{alive} \ = \ \Pi$ \\
+                \ \ $\textit{detected} \ = \ \emptyset$ \\
+                \ \ \underline{for} all $\textit{p} \ \in \ \textit{alive}$ \underline{do} \\
+                \ \ \ start timer $\Delta \ + \ \Phi \ + \ 1$ \\
+                \ \ start timer $\Delta \ + \ \Phi$ for this process \\
+                \\
+                \underline{upon} \textit{timeout} for p not this process \underline{do}\\
+                \ \ trigger $\langle \textit{P, Crash} \mid p \rangle$ \\
+                \ \ $\textit{alive} \ \leftarrow \ \textit{alive} \setminus \ \textit{p}$ \\
+                \ \ $\textit{detected} \ \leftarrow \ \textit{detected} \ \cup \ \{ \textit{p} \}$ \\
+                \\
+                \underline{upon} \textit{timeout} for this process \underline{do}\\
+                \ \ reset timer for this process\\
+                \ \ trigger $\langle \textit{P, heartbeat} \mid this \rangle$ \\
+                \\
+                \underline{upon} $\langle \textit{P, heartbeat} \mid \textsc{p} \rangle$ \underline{do}\\
+                \ \ wait until timer for \textit{p} = 1 \\
+                \ \ reset timer for \textit{p} \\
+                %\hline
+            \end{tabular}
+        \end{tabular}
+        \item Every process triggers a heartbeat every $\Delta \ + \ \Phi$, this heartbeat takes max. $\Delta \ + \ \Phi$ to arrive at every other alive process. Therefor if after $\Delta \ + \ \Phi \ + \ 1$, no heartbeat arrives, the not received heartbeat is interpreted as the other process havin crashed. 
+        At the same moment every process triggers a new heartbeat and it starts over again.\\
+        On the other hand Algorithm 2.5 does not work with heartbeats but with request/response instead.		
+    \end{enumerate}
+	
+	\section*{3.3 Quorum Systems}
+	\begin{adjustwidth}{2em}{2em}
+		\begin{enumerate}[\footnotesize{\textbullet}]
+			\item \textsc{\textbf{Singleton}} \\
+			There mustn't be any failed process. Because:
+			\[
+				\not\exists p \in \Pi : (\not\exists Q \in \mathbb{Q}: p \in Q)
+            \]
+            Essentially for n = 1 the only existing process is in Q, therefor it is needed and can't fail.
+			\item \textsc{\textbf{Majority:}} \\
+			\textsc{maximum/minimum:} $\lfloor \frac{n-1}{2} \rfloor$, because:
+			\[
+				\forall Q \in \mathbb{Q}: \ \mid Q \mid \ = \ \lceil \frac{n+1}{2} \rceil $$ $$
+				\Rightarrow \ \mid \Pi \mid - \mid Q \mid \ = \ n - \lceil \frac{n+1}{2} \rceil \ = \ \lfloor \frac{n-1}{2} \rfloor
+            \]
+			\item \textsc{\textbf{Grid:}}
+			\begin{enumerate}[]
+				\item \textsc{maximum:} \\
+				We take the $Q$ with the fewest elements, which would be equal to the bottom row of the grid (as every Q has one entire row, but as this is the last row, there are no elements underneath). Therefore we must have $k$ correct processes and at most $k^{2} - k$ faulty processes.
+				\item \textsc{minimum:} \\
+				We take the $Q$ with the most elements which would be equal to the top row with $k-1$ additional processes underneath. Therefore we must have in total $2k-1$ correct processes, so at most $k^{2} - 2k +1$ faulty processes.
+			\end{enumerate}
+		\end{enumerate}
+	\end{adjustwidth}
+\end{document}
