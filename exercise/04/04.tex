@@ -1,0 +1,98 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 04
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{4.1 Emulating a (1, N) register from (1, 1) registers}
+    \begin{enumerate}[(a)]
+        \item safe: A read() not concurrent with a write, returns the value written by the most recent write() operation\\
+        on <br.q-WriteReturn> <onr-WriteReturn> is only triggered if all (1, 1) Registers have previously triggered <br.q-WriteReturn>. Hence once <onr-WriteReturn> is triggered, each br.q has finished writing.
+        Therefor each br.q contains the same value that was written here.\\
+        upon event <onr-Read> not concurrent with said write operation, therefor no matter which br.q will be read, the correct value will be read.\\
+        This implies that the emulation is safe.
+        \item regular: A read() not concurrent with a write returns the most recently written value. Otherwise read() returns the most recently written value or the concurrently written value\\
+        if the read and write operations are not concurrent the property holds with the same argumentation as in a).\\
+        assuming the read and write operations happen concurrently: 
+        if the value to be written equals the old value, then nothing changes in the register and the correct value must be returned (this is trivial).
+        if the value to be written differs from the old value, then one value is 0 and the other one is 1 (as the registers are binary). therefor no matter which value the binary (1, N) register eventually returns it's eighter the old or the new Value.
+        Therefor the condition holds aswell for concurrent read/write, therefor the algorithm implements a regular binary (1, N)-register!
+        \item regular: A read() not concurrent with a write returns the most recently written value. Otherwise read() returns the most recently written value or the concurrently written value\\
+        if the read and write operations are not concurrent the property holds with the same argumentation as in a).\\
+        if a read happens concurrently with a write, we still have guaranteed that each br.q will either return the old or the new value therefor no matter which of the br.q is read in the onr-Read, it always returns one of the two said values.
+        Therefor this implementation in this scenario is a regular multi-valued (1, N) register
+    \end{enumerate}
+
+    \section*{4.2 Multivalued register from binary registers}
+    This algorithm implements mutual exclusion for one reader and one writer. The main idea is to only let the reader or the writer access the register at the same time, but not both at the same time.\\
+    We can imagine the algorithm like two people communicating with flags: if the flag was raised, the person would like to access the register, to avoid a deadlock, both processes give priority to the other process, given both want to access the register at the same time. It's important that the onHold variable always either holds one or the other value but nothing else. Therefor onHold is binary.
+    \begin{tabular}{ccccc}
+        \begin{tabular}{|p{40em}|}
+            \hline
+            \underline{State:} \\
+            \ \ $br_0$, ... $br_k$ all 0 \\
+            \ \ $\textit{writing} \ = \ false$ \\
+            \ \ $\textit{reading} \ = \ false$ \\
+            \ \ $\textit{onHold} \ = \ \emptyset$ \\
+            \\
+            \underline{function} \textit{mvr.write(v)} \\
+            \ \ $\textit{writing} \ = \ true$ \\
+            \ \ $\textit{onHold} \ = \ 1$ \\
+            \ \ \underline{while} \textit{reading} AND \textit{onHold} = 1 \{\} \\
+            \ \ $(b_k ... b_0)_2 \leftarrow \textit{v}$ \\
+            \ \ \underline{for} \textit{i} between \textit{0} and \textit{k}\\
+            \ \ \ $br_i.write(b_i)$\\
+            \ \ $\textit{writing} \ = \ false$ \\
+            \ \ \textit{return} ACK\\
+            \\
+            \underline{function} \textit{mvr.read()} \\
+            \ \ $\textit{reading} \ = \ true$ \\
+            \ \ $\textit{onHold} \ = \ 0$ \\
+            \ \ \underline{while} \textit{writing} AND \textit{onHold} = 0 \{\} \\
+            \ \ \underline{for} \textit{i} between \textit{0} and \textit{k}\\
+            \ \ \ $v_i \leftarrow br_i.read()$\\
+            \ \ $\textit{reading} \ = \ false$ \\
+            \ \ $\textit{return} (v_k ... v_0)_2$\\
+            \hline
+        \end{tabular}
+    \end{tabular}			
+
+
+    \section*{4.3 Register emulations without correct majority?}
+    An eventually perfect failure detector can suspect processes of failing even though they did not fail (as it will only be perfect at some point in the future).
+    We already know that the Majority Voting Regular Register will be wrong if the Correct Majority assumption is violated.
+    Initially the system may behave as in the Faile Silent Mode, because the failure Detector can initially be wrong. (Processes can Fail, but the Failure detector does not notice it)\\
+    Therefor the same assumptions as in the Fail Silent mode are needed during the initial period. If we don't have these assumptions, the same things can go wrong as in the fail silent mode.
+    TODO example
+\end{document}
