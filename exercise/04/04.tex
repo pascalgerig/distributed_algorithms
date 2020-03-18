@@ -90,9 +90,35 @@
 
 
     \section*{4.3 Register emulations without correct majority?}
-    An eventually perfect failure detector can suspect processes of failing even though they did not fail (as it will only be perfect at some point in the future).
-    We already know that the Majority Voting Regular Register will be wrong if the Correct Majority assumption is violated.
-    Initially the system may behave as in the Faile Silent Mode, because the failure Detector can initially be wrong. (Processes can Fail, but the Failure detector does not notice it)\\
-    Therefor the same assumptions as in the Fail Silent mode are needed during the initial period. If we don't have these assumptions, the same things can go wrong as in the fail silent mode.
-    TODO example
+    % An eventually perfect failure detector can suspect processes of failing even though they did not fail (as it will only be perfect at some point in the future).
+    % We already know that the Majority Voting Regular Register will be wrong if the Correct Majority assumption is violated.
+    % Initially the system may behave as in the Faile Silent Mode, because the failure Detector can initially be wrong. (Processes can Fail, but the Failure detector does not notice it)\\
+    % Therefor the same assumptions as in the Fail Silent mode are needed during the initial period. If we don't have these assumptions, the same things can go wrong as in the fail silent mode.
+    % TODO example
+
+    An eventually perfect failure detector is unable to relax the assumption of
+    correct majorities, as it might incorrectly identify correct processes as
+    failed.
+
+    As it is only eventually perfect, it can predict incorrect failures, thereor not providing any correct information in the beginning.
+    In this period the assumption can not be relaxed as the algorithm might not posses more informations than in the fail silent mode.
+
+    Consider a system with $\Pi$ processes, and two disjoint sets $A \subset \Pi$,
+    $B \subset \Pi$. Let $p \in A$ be the writer process, and $q \in B$ one of the
+    reader processes. Assume all processes are currently storing $(wts, val) := (1,
+    v)$.
+
+    Assume that $\Diamond P$ suspects all processes in $B$ of having crashed. A
+    write operation $write(v')$ will then have $p$ wait until - at most - all
+    `healthy' processes $p' \in A$ have confirmed the write, after which the write
+    operation will be considered finished. Assume then that $\Diamond P$ recovers
+    all processes in $B$, while simultaneously suspecting all processes in $A$ of
+    having crashed.
+
+    A read operation by $q$ will then only read values from processes $p' \in B$,
+    which will clearly lead to returning value $v$.
+
+    As such a non-concurrent read operation will have returned a value which was
+    not the value written by the most recently completed write operation, violating
+    the validity property of a regular register.
 \end{document}
