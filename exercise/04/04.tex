@@ -108,7 +108,7 @@
     reader processes. Assume all processes are currently storing $(wts, val) := (1,
     v)$.
 
-    Assume that $\Diamond P$ suspects all processes in $B$ of having crashed. A
+    If $\Diamond P$ suspects all processes in $B$ of having crashed. A
     write operation $write(v')$ will then have $p$ wait until - at most - all
     `healthy' processes $p' \in A$ have confirmed the write, after which the write
     operation will be considered finished. Assume then that $\Diamond P$ recovers
@@ -116,7 +116,7 @@
     having crashed.
 
     A read operation by $q$ will then only read values from processes $p' \in B$,
-    which will clearly lead to returning value $v$.
+    which will clearly lead to returning value $v$ instead of $v'$.
 
     As such a non-concurrent read operation will have returned a value which was
     not the value written by the most recently completed write operation, violating
