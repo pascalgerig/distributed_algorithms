@@ -1,0 +1,119 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 05
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{5.1 Regular register executions}
+    \begin{enumerate}[a)]
+        \item
+        \begin{enumerate}[1.]
+            \item With a Read-One Write-All algorithm the execution shown in Figure 1 is not possible.
+            each Reader Process reads the value stored in its own Process. 
+            As $\textit{read()} \rightarrow y$ happens before $\textit{read()} \rightarrow x$ we know that the stored value in q when starting the second \textit{read()} must be \textit{y}.
+            Since we have a (1, N) register all the not mentioned processes are reader processes and can not write the value written in \textit{q}. Therefor the last \textit{read()} will necessarily return y.
+            \item We have one write process p, a reader process q and two processes s1 and s2 initial-
+            ized with the storage of ?. First p will call the write operation which because it is
+            not concurrent will be acknowledged and s1 and s2 store the yalue of x. Therefore
+            the read operation which is sequential after the write operation and will therefore
+            return x because both s1 and s2 (so it does not matter which of them is read) have
+            stored this value. Before the next read call from q is fnished p call the write oper-
+            ation to store the value of y. We assume q is trying to read from s1. s1 is storing
+            the value of y before the read process is terminating and is therefore returning y.
+            The next read operation will read from s2. Because s2 is a little bit slower to write
+            the new value it will still have stored the value of x at the time it returns the value
+            for the read operation. Therefore the read operation will output x. In the end s2
+            will acknowledge that it has stored the value of y.
+        \end{enumerate}
+        \item We asume that we have three processes: A writer \textit{p} and two readers \textit{q} and \textit{r}.
+        \textit{r} does not execute any \textit{read()} operations, but participates in storing the current value.
+        Assume further that, after the first \textit{read()} of \textit{q}, all three processes contain the value \textit{x}.
+        \textit{p} now starts \textit{write(y)}, at a given time $\textit{t}_1$, \textit{p} has acknowledged \textit{y} while the other two still contain \textit{x}.
+        \textit{q} now executes the second \textit{read()}. The majority, that whitnesses the value is $\{ p, q \}$
+        Since the \textit{y} stored in \textit{p} has a higher timestamp, than the \textit{x} in \textit{q}, the \textit{read()} will return \textit{y}.
+        While the \textit{write()} does not make any progress for a while, \textit{q} at a later time $\textit{t}_2$ starts its last \textit{read()}.
+        In this case, the majority whitnessing the value might be $\{q, r\}$.
+        None of these two processes has written \textit{y} yet, therefor the function will return \textit{x}
+    \end{enumerate}
+    \section*{5.2 Read-all write-one regular register}
+    \begin{tabular}{ccccc}
+        \begin{tabular}{|p{40em}|}
+            \hline
+            \underline{Implements:} \\
+            \ \ (1, N ) -RegularRegister, instance onrr.\\
+            \\
+            \underline{Uses:} \\
+            \ \ BestEffortBroadcast, instance beb; \\
+            \ \ PerfectPointToPointLinks, instance pl; \\
+            \ \ PerfectFailureDetector, instance P . \\
+            \\
+            \underline{upon} $\langle \textit{onrr, Init}\rangle$ \underline{do}\\
+            \ \ $\textit{val} \ = \ \bot$ \\
+            \ \ $\textit{correct} \ = \ \Pi$ \\
+            \ \ $\textit{readList} \ = \ []$ \\
+            \ \ $\textit{rid} \ = \ 0$ \\
+            \ \ $\textit{wts} \ = \ 0$ \\
+            \\
+            \underline{upon} $\langle \textit{P, Crash} \mid \textsc{p} \rangle$ \underline{do}\\
+            \ \ $\textit{correct} \ = \ correct \setminus \{p\}$ \\
+            \\
+            \underline{upon} $\langle \textit{onrr, Read} \rangle$ \underline{do}\\
+            \ \ $\textit{rid} \ = \ rid \ + \ 1$ \\
+            \ \ trigger  $\langle \textit{beb, Broadcast} \mid \ [\textsc{READ,} \ rid] \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{onrr, Write} \mid \ v \ \rangle$ \underline{do}\\
+            \ \ $\textit{val} \ = \ v$ \\
+            \ \ $\textit{wts} \ = \ wts \ + \ 1$ \\
+            \ \ trigger  $\langle \textit{onrr, WriteReturn} \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{beb, Deliver} \mid \ q, \ [\textsc{READ,} \ rid \ ] \rangle$ \underline{do}\\
+            \ \ trigger  $\langle \textit{pl, Send} \mid \textit{q, [VALUE, rid, wts, val]} \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ [ \ \textsc{VALUE,} \ id, \ ts, \ v] \rangle \ s.t. \ id \ = \ rid$ \underline{do}\\
+            \ \ $\textit{readList}\leftarrow (\textsc{ts, v})$ \\
+            \ \ \underline{if} $\#readlist \ \geq \ \#correct$ \\
+            \ \ \ $\textit{value} \ = \ \textit{highestval(readList)}$ \\
+            \ \ \ $\textit{readList} \ = \ []$ \\
+            \ \ \ trigger $\langle \textit{onrr, ReadReturn} \mid \textit{value} \rangle$\\\\
+            \hline
+        \end{tabular}
+    \end{tabular}
+    \\
+    \\
+    were highestval(x) is defined as in CGR11 Page 148.
+
+    \section*{5.3 (1, 1) Atomic register}
+    A reader process can update its $(wts, val)$ pair as the last step before triggering the \textit{ReadReturn}, after the if condition is fulfilled. 
+    After the value with the highest timestamp is chosen the process can update its pair with these values so it is up to date again.
+\end{document}
