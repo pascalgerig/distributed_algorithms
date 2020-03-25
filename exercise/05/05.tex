@@ -43,20 +43,15 @@
             each Reader Process reads the value stored in its own Process. 
             As $\textit{read()} \rightarrow y$ happens before $\textit{read()} \rightarrow x$ we know that the stored value in q when starting the second \textit{read()} must be \textit{y}.
             Since we have a (1, N) register all the not mentioned processes are reader processes and can not write the value written in \textit{q}. Therefor the last \textit{read()} will necessarily return y.
-            \item We have one write process p, a reader process q and two processes s1 and s2 initial-
-            ized with the storage of ?. First p will call the write operation which because it is
-            not concurrent will be acknowledged and s1 and s2 store the yalue of x. Therefore
-            the read operation which is sequential after the write operation and will therefore
-            return x because both s1 and s2 (so it does not matter which of them is read) have
-            stored this value. Before the next read call from q is fnished p call the write oper-
-            ation to store the value of y. We assume q is trying to read from s1. s1 is storing
-            the value of y before the read process is terminating and is therefore returning y.
-            The next read operation will read from s2. Because s2 is a little bit slower to write
-            the new value it will still have stored the value of x at the time it returns the value
-            for the read operation. Therefore the read operation will output x. In the end s2
-            will acknowledge that it has stored the value of y.
+            \item An execution as shown in Figure 2 however is possible.
+	 The key is the "Write one" part. up to the point where the first $\textit{read()} \rightarrow x$ completes, the exetuion is trivial.
+	 During the period, in which $\textit{write(y)}$ is executed, we assume that the following things happen in provided order:
+	 First of, the \textit{val} of \textit{r} is set to \textit{y}, then the reading of \textit{val} happens in \textit{r} which determines the result of the read operation in \textit{r}.
+	 Next, \textit{val} of \textit{q} is read, since the new value \textit{y} has not yet been written, the read operation in \textit{q} must therefor return \textit{x}.
+	 Finally \textit{val} of \textit{q} is set to the new value y and then the concurrent write operation will eventually complete.
+	 This scenario clearly results in an execution as shown in Figure 2.
         \end{enumerate}
-        \item We asume that we have three processes: A writer \textit{p} and two readers \textit{q} and \textit{r}.
+        \item Reproducing the Execution in Figure 1, we asume that we have three processes: A writer \textit{p} and two readers \textit{q} and \textit{r}.
         \textit{r} does not execute any \textit{read()} operations, but participates in storing the current value.
         Assume further that, after the first \textit{read()} of \textit{q}, all three processes contain the value \textit{x}.
         \textit{p} now starts \textit{write(y)}, at a given time $\textit{t}_1$, \textit{p} has acknowledged \textit{y} while the other two still contain \textit{x}.
@@ -64,8 +59,14 @@
         Since the \textit{y} stored in \textit{p} has a higher timestamp, than the \textit{x} in \textit{q}, the \textit{read()} will return \textit{y}.
         While the \textit{write()} does not make any progress for a while, \textit{q} at a later time $\textit{t}_2$ starts its last \textit{read()}.
         In this case, the majority whitnessing the value might be $\{q, r\}$.
-        None of these two processes has written \textit{y} yet, therefor the function will return \textit{x}
+        None of these two processes has written \textit{y} yet, therefor the function will return \textit{x}.\\
+        Considering Figure 2, everything would stay the same, except that the $\textit{read()}\rightarrow y$ would be executed on r instead of on q.
     \end{enumerate}
+
+      \section*{5.3 (1, 1) Atomic register}
+   If we assume, that we know which process is the reader process, we could modify Algorithm 4.2 such that the reader process stores the latest read value.
+   Algorithm 4.2 would be executed as usual, but before triggering the \textit{ReadReturn}, the algorithm would compare the timestamp of the value given by the read value of the regular 4.2 and the latest returned value, and set the latest value and timestamp to whichever of the two has the higher timestamp. Then it could return the value of the two with the higher timestamp which would make the algorithm implement a (1, 1) Atomic Register.
+
     \section*{5.2 Read-all write-one regular register}
     \begin{tabular}{ccccc}
         \begin{tabular}{|p{40em}|}
@@ -113,7 +114,5 @@
     \\
     were highestval(x) is defined as in CGR11 Page 148.
 
-    \section*{5.3 (1, 1) Atomic register}
-    A reader process can update its $(wts, val)$ pair as the last step before triggering the \textit{ReadReturn}, after the if condition is fulfilled. 
-    After the value with the highest timestamp is chosen the process can update its pair with these values so it is up to date again.
+  
 \end{document}
