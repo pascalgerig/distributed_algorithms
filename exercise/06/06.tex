@@ -40,16 +40,16 @@
 	From this order, we can conclude the following:
 	\begin{enumerate}
 		\item if writes coming from \textit{p} and \textit{q} have the same timestamp, then once both operations completed, the value from \textit{q}'s write operation will be stored in the register
-		\item if writes coming from \textit{p} and \textit{q} have the same timestamp, then a processes read operation can only readRetrun the value written by \textit{q}, if the process has not yet received the value from \textit{p}
+		\item if writes coming from \textit{p} and \textit{q} have the same timestamp, then a processes read operation can only readRetrun the value written by \textit{p}, if the process has not yet received the value from \textit{q}
 	\end{enumerate}
 	From these two rules we can follow how the executions must look like such that:
 	\begin{enumerate}[a)]
-		\item $\textit{read}_r \rightarrow \textit{x}$ and $\textit{read}_s \rightarrow \textit{y}$: the broadcast of value \textit{y} arrives at process \textit{r} after the local value has been read in the read operation of \textit{r}. the broadcast of value 			\textit{x} arrived, before said read happened. The brodcast of value \textit{y} arrived at \textit{s}, before the local value has been read in the read operation. It does not matter at what point \textit{x} arrives at \textit{s}, since \textit{q} has 				priority over \textit{p}
+		\item $\textit{read}_r \rightarrow \textit{x}$ and $\textit{read}_s \rightarrow \textit{y}$: the broadcast of value \textit{y} arrives at process \textit{r} after the local value has been read in the read operation of \textit{r}. the broadcast of value \textit{x} arrived, before said read happened. The brodcast of value \textit{y} arrived at \textit{s}, before the local value has been read in the read operation. It does not matter at what point \textit{x} arrives at \textit{s}, since \textit{q} has priority over \textit{p}
 		\item $\textit{read}_r \rightarrow \textit{y}$ and $\textit{read}_s \rightarrow \textit{x}$: The exact oposite of Execution A must be true: 
-		 the broadcast of value \textit{y} arrives at process \textit{s} after the local value has been read in the read operation of \textit{s}. the broadcast of value \textit{x} arrived, before said read happened. The brodcast of value \textit{y} arrived at 			\textit{r}, before the local value has been read in the read operation. It does not happen at what point \textit{x} arrives at \textit{r}, since \textit{q} has priority over \textit{p}
+		 the broadcast of value \textit{y} arrives at process \textit{s} after the local value has been read in the read operation of \textit{s}. the broadcast of value \textit{x} arrived, before said read happened. The brodcast of value \textit{y} arrived at  \textit{r}, before the local value has been read in the read operation. It does not matter at what point \textit{x} arrives at \textit{r}, since \textit{q} has priority over \textit{p}
 	\end{enumerate}
 
-	Due to Rule 1, $\textit{read}_t$ will in both cases return \textit{y} since once both write operations complete, \textit{y} will be stored due to the order.
+	Due to Rule 1 and the fact, that t will execute it's read operation only once both writes have completed, $\textit{read}_t$ will in both cases return \textit{y} since once both write operations complete, \textit{y} will be stored due to the order.
 
     	\section*{6.2 Erasure-coded storage}
 	\begin{enumerate}[a)]
@@ -68,7 +68,7 @@
 				\ \ $\textit{wts} \ = \ wts \ + \ 1$ \\
 				\ \ \textit{pol} = lagrangeInterpolation($(0,v_1),...,(k-1, v_k)$)\\
 				\ \ \underline{for} \ $i = 0$ \ to \ $\lceil N/2 \rceil$ \underline{do} \\
-				\ \ \ trigger  $\langle \textit{pl, send} \mid \ p_i, \ $[\textit{WRITE, ts', } $(i, pol(v_i))] \rangle$\\
+				\ \ \ trigger  $\langle \textit{pl, send} \mid \ p_i, \ $[\textit{WRITE, wts, } $(i, pol(v_i))] \rangle$\\
 				\\
 				\underline{upon} $\langle \textit{pl, Deliver} \mid \ q, \ [ \ \textsc{VALUE,} \ id, \ ts', \ (index', v')] \rangle \ s.t. \ id \ = \ rid$ \underline{do}\\
 				\ \ $\textit{readList}\leftarrow (ts', (index', v'))$ \\
@@ -86,7 +86,7 @@
 
 		\item Since any ereasure code will spread the data across all available fragments, one will need multiple fragments to reconstruct the data.
 		Therefor a register will have to read information from multiple processes to get the value to be returned in the read operation.
-		For this reason a regular register has to guarantee that all the neede processes will either return the last written or the concurrently written value, bot all the processes need to return the same of the two options.
+		For this reason a regular register has to guarantee that all the neede processes will either return the last written or the concurrently written value, but all the processes need to return the same of the two options.
 		This is obviously difficult to achieve in the fail silent model.
 	\end{enumerate}
 
