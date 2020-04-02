@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 07
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{7.1 Worst-case latency of eager reliable broadcast}
+    each process broadcasts each message that is deliver to it by beb exactly once.
+    Therefor we have to find the maximum possible number of messages that can be sent with a sender broadcasting a message to max. $N$ processes,
+    and $N$ receiveres broadcast the message again to max. $N$ processes.
+    Therefor the maximum number of point-to-point messages that can be sent for one single broadcast is $N + N^2$
+
+    \section*{7.2 Uniform reliable broadcast in the fail-stop model}
+    \begin{enumerate}[a)]
+        \item strong completeness violated: Assume that a process that crashed is not detected by the correct processes,
+        then \textit{correct} contains at least one process that has crashed.
+        thus \textit{candeliver(m)} can return \textsc{false} even though every correctly working process has acknowledged the message \textit{m}.
+        In this scenario a process might never deliver the message \textit{m}, this violates the Uniform agreement property.
+        
+        \item strong accuracy violated: Assume that some correct process detects another process as crashed while the other process is actually working correctly,
+        then at least one correctly working process is not stored in \textit{correct}.
+        Therefore \textit{candeliver(m)} might return \textsc{true}, even though some correctly working process has not yet acknowledged the message.
+        If now for instance, one process thinks, that all the other processes have crashed (even though they work correctly), it is possible, that this process deliveres the message, and then crashes, without any other correct process ever delivering this message.
+        This is clearly a violation to the Uniform agreement property
+    \end{enumerate}
+    \section*{7.3 FIFO broadcast from FIFO links}
+\end{document}
