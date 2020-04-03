@@ -55,4 +55,9 @@
         This is clearly a violation to the Uniform agreement property
     \end{enumerate}
     \section*{7.3 FIFO broadcast from FIFO links}
+    As we have sofar always assumed, that one process is single threaded and the event handlers are atomic, the \textit{eager reliable broadcast} protocol modified as described in the excercise,
+    must implement FIFO-order reliable broadcast.
+    Since we use a FIFO \textsc{beb-broadcast}, we know that if one process \textit{beb-delivers} a message $m_2$ sent after a message $m_1$, then $m_1$ was \textsc{beb-delivered} beforehand.
+    As the event-handlers are atomic, $m_2$ will not be able to overtake $m_1$ inside the event handler, thus $m_1$ will be rebroadcasted (If received from the original sender) before $m_2$.
+    With the same argumentation, we can not loose the FIFO property in this next step. 
 \end{document}
