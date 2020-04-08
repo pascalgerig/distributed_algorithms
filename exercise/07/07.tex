@@ -36,23 +36,37 @@
 	\pagestyle{fancy}
 	
     \section*{7.1 Worst-case latency of eager reliable broadcast}
-    each process broadcasts each message that is deliver to it by beb exactly once.
-    Therefor we have to find the maximum possible number of messages that can be sent with a sender broadcasting a message to max. $N$ processes,
-    and $N$ receiveres broadcast the message again to max. $N$ processes.
-    Therefor the maximum number of point-to-point messages that can be sent for one single broadcast is $N + N^2$
+    %each process broadcasts each message that is deliver to it by beb exactly once.
+    %Therefor we have to find the maximum possible number of messages that can be sent with a sender broadcasting a message to max. $N$ processes,
+    %and $N$ receiveres broadcast the message again to max. $N$ processes.
+    %Therefor the maximum number of point-to-point messages that can be sent for one single broadcast is $N + N^2$
+    In the worst case scenario, each process is only able to send the message to one process that has not received the message yet, and then crash.
+    The sender keeps running, but all messages except for the first one are delayed until the end.
+    Furthermore, the last receiver keeps running aswell.
+    The execution would look as follows:
+    \begin{itemize}
+        \item $p_1$ broadcasts \textit{[DATA, $p_1$, m]}, all messages except the one to $p_2$ are delayed.
+        \item $p_2$ delivers \textit{[DATA, $p_1$, m]} from $p_1$, broadcast message again
+        \item $p_3$ delivers \textit{[DATA, $p_1$, m]} from $p_2$, broadcast message again
+        \item $p_2$ crashes
+        \item \dots
+        \item $p_n$ delivers \textit{[DATA, $p_1$, m]} from $p_{n-1}$, broadcast message again
+        \item $p_{n-1}$ crashes
+    \end{itemize}
+    In this scenario there are \textit{O($n^2$)} messagess, where \textit{O(n)} were delivered.
 
     \section*{7.2 Uniform reliable broadcast in the fail-stop model}
     \begin{enumerate}[a)]
         \item strong completeness violated: Assume that a process that crashed is not detected by the correct processes,
         then \textit{correct} contains at least one process that has crashed.
         thus \textit{candeliver(m)} can return \textsc{false} even though every correctly working process has acknowledged the message \textit{m}.
-        In this scenario a process might never deliver the message \textit{m}, this violates the Uniform agreement property.
+        In this scenario a process might never deliver the message \textit{m}, this violates the validity property. This scenario violates liveness, since nothing good will happen eventually (as nothing will happen at all)
         
         \item strong accuracy violated: Assume that some correct process detects another process as crashed while the other process is actually working correctly,
         then at least one correctly working process is not stored in \textit{correct}.
         Therefore \textit{candeliver(m)} might return \textsc{true}, even though some correctly working process has not yet acknowledged the message.
         If now for instance, one process thinks, that all the other processes have crashed (even though they work correctly), it is possible, that this process deliveres the message, and then crashes, without any other correct process ever delivering this message.
-        This is clearly a violation to the Uniform agreement property
+        This is clearly a violation to the Uniform agreement property. This is a safety violation since this will property will not hold in any execution that extends the one described above.
     \end{enumerate}
     \section*{7.3 FIFO broadcast from FIFO links}
     As we have sofar always assumed, that one process is single threaded and the event handlers are atomic, the \textit{eager reliable broadcast} protocol modified as described in the excercise,
