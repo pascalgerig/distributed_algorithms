@@ -68,6 +68,9 @@
         If now for instance, one process thinks, that all the other processes have crashed (even though they work correctly), it is possible, that this process deliveres the message, and then crashes, without any other correct process ever delivering this message.
         This is clearly a violation to the Uniform agreement property. This is a safety violation since this will property will not hold in any execution that extends the one described above.
     \end{enumerate}
+
+    \newpage
+    
     \section*{7.3 FIFO broadcast from FIFO links}
     As we have sofar always assumed, that one process is single threaded and the event handlers are atomic, the \textit{eager reliable broadcast} protocol modified as described in the excercise,
     must implement FIFO-order reliable broadcast.
