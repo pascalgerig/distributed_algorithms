@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 08
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{8.1 Total-order broadcast using consensus}
+    \begin{enumerate}[a)]
+        \item The consensus instance decides on one of the proposed sets, meaning that each process will receive the same set of messages.
+        A set is in general unordered, thus we would have the guarantee, that all processes deliver the entire set of messages, but we have no guarantee on the orderer
+        thus we would not be able to guarantee that the $total order$ property holds.
+        \item One alternative to sorting would be, to only $propose$ one message at the time, since if consensus decides one single message, then ordering is not required.
+        Thus one could adapt the algorighm as follows (unchanged partes are not listed again):\\
+
+        \begin{tabular}{ccccc}
+			\begin{tabular}{|p{40em}|}
+				\hline
+				\underline{upon} $unordered \neq \emptyset \wedge wait = false$ \underline{do}\\
+				\ \ $\textit{wait} \ = \ true$\\
+				\ \ \textit{Initialize a new instance c.round of consensus} \\
+				\ \ $\textit{message} \ = \ pickOne(\textit{unordered})$ \\
+				\ \ trigger  $\langle \textit{c.round, Propose} \mid \ message$\\
+				\hline
+			\end{tabular}
+        \end{tabular}\\
+        
+        $pickOne$ selects one element of the given set, in this case it does not matter how the element is chosen.
+    \end{enumerate}
+
+    \section*{8.3 Replicated register with local read}
+    One could just return the local value whenever a read request is started as follows:\\
+    \begin{tabular}{ccccc}
+        \begin{tabular}{|p{40em}|}
+            \hline
+            \\
+            \underline{upon} $\langle \textit{nnar, Read}\ \rangle$ \underline{do}\\
+            \ \ trigger  $\langle \textit{nnar, ReadReturn} \mid val\rangle$\\
+            \\
+            \hline
+        \end{tabular}
+    \end{tabular}\\
+    
+    Everything that is left out remains as in 8.2
+
+    This change doesn't violate the atomicity property of the register, since the state of the replicated state machine contains only one written value.
+    Once this value is overwritten, every local read will from that moment on return the new value.
+
+    \section*{8.2 Atomic register as a replicated state machine}
+    \begin{tabular}{ccccc}
+        \begin{tabular}{|p{40em}|}
+            \hline
+            \underline{Implements:} \\
+            \ \ (N, N) Atomic Register, instance nnar.\\
+            \\
+            \underline{upon} $\langle \textit{nnar, Init}\ \rangle$ \underline{do}\\
+            \ \ $val \ = \ \emptyset$\\
+            \ \ $readCount \ = \ 0$\\
+            \ \ $writeCount \ = \ 0$\\
+            \\
+            \underline{upon} $\langle \textit{nnar, Read}\ \rangle$ \underline{do}\\
+            \ \ trigger  $\langle \textit{tob, broadcast} \mid READ\rangle$\\
+            \\
+            \underline{upon} $\langle \textit{nnar, Write} \mid \ v \ \rangle$ \underline{do}\\
+            \ \ trigger  $\langle \textit{tob, broadcast} \mid \ $[\textit{WRITE, v}]$ \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{tob, Deliver} \mid p, \ READ \rangle$ \underline{do}\\
+            \ \ trigger  $\langle \textit{pl, Send} \mid p, \ $[\textit{RACK, val}]$ \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{tob, Deliver} \mid \ p, \ $[\textit{WRITE, v}]$ \rangle$ \underline{do}\\
+            \ \ $val \ = \ v$ \\
+            \ \ trigger  $\langle \textit{pl, Send} \mid p, \ \textsc{WACK} \rangle$\\
+            \\
+
+            \underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ \textsc{WACK} \ \rangle$ \underline{do}\\
+            \ \ $writeCount \ = \ writeCount \ + \ 1$\\
+            \ \ \underline{if} $writeCount = |\Pi|$ \underline{do} \\
+            \ \ \ $writeCount \ = \ 0$ \\
+            \ \ \ trigger $\langle \textit{nnar, WriteReturn} \rangle$\\
+            \\
+            \underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ $ [\textit{RACK, v}] $ \rangle$ \underline{do}\\
+            \ \ $readCount \ = \ readCount \ + \ 1$\\
+            \ \ \underline{if} $readCount = |\Pi|$ \underline{do} \\
+            \ \ \ $readCount \ = \ 0$ \\
+            \ \ \ trigger $\langle \textit{nnar, ReadReturn} \mid v \rangle$\\
+            \\
+            \hline
+        \end{tabular}
+    \end{tabular}\\
+
+    \begin{itemize}
+        \item Termination: Is trivial as clearly both the $ReadReturn$ and the $WriteReturn$ will eventually be triggered
+        \item Atomicity: Every possible execution is linearizable, if we use the moment where $val$ is written as linearization points for the $write$ operations.
+        once a concurrently beeing written value is saved in $val$ the old value is lost and can not be returned anymore.
+        Therefor from that moment on the new value will always be returned.
+    \end{itemize}
+    
+\end{document}
