@@ -59,22 +59,43 @@
     \end{enumerate}
 
     \section*{8.3 Replicated register with local read}
-    One could just return the local value whenever a read request is started as follows:\\
-    \begin{tabular}{ccccc}
-        \begin{tabular}{|p{40em}|}
-            \hline
-            \\
-            \underline{upon} $\langle \textit{nnar, Read}\ \rangle$ \underline{do}\\
-            \ \ trigger  $\langle \textit{nnar, ReadReturn} \mid val\rangle$\\
-            \\
-            \hline
-        \end{tabular}
-    \end{tabular}\\
+    %One could just return the local value whenever a read request is started as follows:\\
+    %\begin{tabular}{ccccc}
+        %\begin{tabular}{|p{40em}|}
+           % \hline
+          %  \\
+         %   \underline{upon} $\langle \textit{nnar, Read}\ \rangle$ \underline{do}\\
+        %    \ \ trigger  $\langle \textit{nnar, ReadReturn} \mid val\rangle$\\
+       %     \\
+      %      \hline
+     %   \end{tabular}
+    %\end{tabular}\\
     
-    Everything that is left out remains as in 8.2
+    %Everything that is left out remains as in 8.2
 
-    This change doesn't violate the atomicity property of the register, since the state of the replicated state machine contains only one written value.
-    Once this value is overwritten, every local read will from that moment on return the new value.
+    %This change doesn't violate the atomicity property of the register, since the state of the replicated state machine contains only one written value.
+    %Once this value is overwritten, every local read will from that moment on return the new value.
+
+    Total-order broadcast guarantees that, for any process, the history of
+    delivered messages $(m_1 \cdots m_{n-1})$ when delivering a message $m_n$ will
+    be equal. It is not guaranteed what the message history of
+    other processes is now, or will be in the future.
+    Thus a local read might break
+    atomicity. As an example consider the following execution with two processes,
+    $p$ and $q$.
+
+    \begin{itemize}
+        \item $p$ nnar-writes $x$, broadcasts $[WRITE, x]$
+        \item $p$ tob-delivers $[WRITE, x]$, sets $val := x$, nnar-write-returns
+        \item $p$ nnar-reads, reads locally, returns $val = x$
+        \item $q$ nnar-reads, reads locally, returns $val = \bot$
+        \item $q$ tob-delivers  $[WRITE, x]$, sets $val := x$
+    \end{itemize}
+
+    The total-order property holds, as the tob-delivered messages of both processes
+    are $([WRITE, x])$. As a result both state machines are in sync, and yet the
+    atomicity property of the regular register is violated as the second read
+    returned an earlier value than a read preceeding it.
 
     \section*{8.2 Atomic register as a replicated state machine}
     \begin{tabular}{ccccc}
@@ -84,9 +105,9 @@
             \ \ (N, N) Atomic Register, instance nnar.\\
             \\
             \underline{upon} $\langle \textit{nnar, Init}\ \rangle$ \underline{do}\\
-            \ \ $val \ = \ \emptyset$\\
-            \ \ $readCount \ = \ 0$\\
-            \ \ $writeCount \ = \ 0$\\
+            \ \ $val \ = \ \bot$\\
+            %\ \ $readCount \ = \ 0$\\
+            %\ \ $writeCount \ = \ 0$\\
             \\
             \underline{upon} $\langle \textit{nnar, Read}\ \rangle$ \underline{do}\\
             \ \ trigger  $\langle \textit{tob, broadcast} \mid READ\rangle$\\
@@ -95,25 +116,27 @@
             \ \ trigger  $\langle \textit{tob, broadcast} \mid \ $[\textit{WRITE, v}]$ \rangle$\\
             \\
             \underline{upon} $\langle \textit{tob, Deliver} \mid p, \ READ \rangle$ \underline{do}\\
-            \ \ trigger  $\langle \textit{pl, Send} \mid p, \ $[\textit{RACK, val}]$ \rangle$\\
+            \ \ \underline{if} $p$ = $self$ \\
+            \ \ \ trigger  $\langle \textit{nnar, ReadReturn} \mid $val$ \rangle$\\
             \\
             \underline{upon} $\langle \textit{tob, Deliver} \mid \ p, \ $[\textit{WRITE, v}]$ \rangle$ \underline{do}\\
             \ \ $val \ = \ v$ \\
-            \ \ trigger  $\langle \textit{pl, Send} \mid p, \ \textsc{WACK} \rangle$\\
+            \ \ \underline{if} $p$ = $self$ \\
+            \ \ \ trigger  $\langle \textit{nnar, WriteReturn}\rangle$\\
             \\
 
-            \underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ \textsc{WACK} \ \rangle$ \underline{do}\\
-            \ \ $writeCount \ = \ writeCount \ + \ 1$\\
-            \ \ \underline{if} $writeCount = |\Pi|$ \underline{do} \\
-            \ \ \ $writeCount \ = \ 0$ \\
-            \ \ \ trigger $\langle \textit{nnar, WriteReturn} \rangle$\\
-            \\
-            \underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ $ [\textit{RACK, v}] $ \rangle$ \underline{do}\\
-            \ \ $readCount \ = \ readCount \ + \ 1$\\
-            \ \ \underline{if} $readCount = |\Pi|$ \underline{do} \\
-            \ \ \ $readCount \ = \ 0$ \\
-            \ \ \ trigger $\langle \textit{nnar, ReadReturn} \mid v \rangle$\\
-            \\
+            %\underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ \textsc{WACK} \ \rangle$ \underline{do}\\
+            %\ \ $writeCount \ = \ writeCount \ + \ 1$\\
+            %\ \ \underline{if} $writeCount = |\Pi|$ \underline{do} \\
+            %\ \ \ $writeCount \ = \ 0$ \\
+            %\ \ \ trigger $\langle \textit{nnar, WriteReturn} \rangle$\\
+            %\\
+            %\underline{upon} $\langle \textit{pl, Deliver} \mid \ p, \ $ [\textit{RACK, v}] $ \rangle$ \underline{do}\\
+            %\ \ $readCount \ = \ readCount \ + \ 1$\\
+            %\ \ \underline{if} $readCount = |\Pi|$ \underline{do} \\
+            %\ \ \ $readCount \ = \ 0$ \\
+            %\ \ \ trigger $\langle \textit{nnar, ReadReturn} \mid v \rangle$\\
+            %\\
             \hline
         \end{tabular}
     \end{tabular}\\
