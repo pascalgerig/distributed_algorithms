@@ -57,10 +57,17 @@
         \item The algorithm needs more than $N/2$ states when reading from other processes, and more than $N/2$ confirmations when writing to other processes.
         This ensures, that at least one process whitnesses the writes. If a majority of processes is faulty and do not respond, then the conditions $\#(states) > N/2$ and $accepted > N/2$ might never be satisfied.
         \item As the two conditions in a) might never be met, a process might never decide. This violates the \textit{termination} property.
-        \item TODO
+        \item We assume that we have an execution, where \textit{eventual leadership} is already satisfied, meaning that every correct process has started it's last epoch with a correct leader, and the processes $r$ and $s$ have failed.
+        The leader $l$ (in this scenatio $p$ or $q$) might now propose a value: $l$ broadcasts the \textsc{Read} request and waits for answers.
+        Since $r$ and $s$ have failed, they will not send their state to the leader, thus $\#(states) \leq 2$ in the leader process at all times.
+        Therefor the leader will never reach $\#(states) > N/2$ thus waiting forever for this condition to become true and therefor there will be no termination.
     \end{enumerate}
 
     \section*{9.3 Leader-Driven Consensus, optimized}
+    Every process according to the excercise has the same leader $l_0$ who is correct. 
+    initially, each process is initialized with an empty state, since in the initial state, no value was proposed yet.
+    As we know, that this is the case for all processes, there is no point in sending the first round of \textsc{Read} and \textsc{State} messages.
+    Those messages would only deliver information, that is already known, thus the optimization described in the excercise makes sense.
     
     
 \end{document}s
