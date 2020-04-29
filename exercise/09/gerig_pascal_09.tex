@@ -55,8 +55,10 @@
     \section*{9.2 Leader-Driven Consensus}
     \begin{enumerate}[a)]
         \item The algorithm needs more than $N/2$ states when reading from other processes, and more than $N/2$ confirmations when writing to other processes.
-        This ensures, that at least one process whitnesses the writes. If a majority of processes is faulty and do not respond, then the conditions $\#(states) > N/2$ and $accepted > N/2$ might never be satisfied.
-        \item As the two conditions in a) might never be met, a process might never decide. This violates the \textit{termination} property.
+        This ensures, that at least one process whitnesses the writes.
+        Therefore with every read, at least one process knows about the last write, thus the last written value will be returned.
+        \item If a majority of processes is faulty and do not respond, then the conditions $\#(states) > N/2$ and $accepted > N/2$ might never be satisfied. 
+        As the two conditions might never be met, a process might never decide. This violates the \textit{termination} property.
         \item We assume that we have an execution, where \textit{eventual leadership} is already satisfied, meaning that every correct process has started it's last epoch with a correct leader, and the processes $r$ and $s$ have failed.
         The leader $l$ (in this scenatio $p$ or $q$) might now propose a value: $l$ broadcasts the \textsc{Read} request and waits for answers.
         Since $r$ and $s$ have failed, they will not send their state to the leader, thus $\#(states) \leq 2$ in the leader process at all times.
