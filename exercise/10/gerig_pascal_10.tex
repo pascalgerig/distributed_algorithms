@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{paralist}
+\usepackage[T1]{fontenc}
+\usepackage{reledmac}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{scalerel,amssymb}
+
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{fancyhdr}
+\fancyhead[L]{
+	\begin{tabular}{l}
+		\LARGE \textbf{\textsc{Distributed Algorithms}} \\
+		\Large Exercise 10
+	\end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{r}
+		16-104-721 \\
+		Pascal \textsc{Gerig}
+	\end{tabular}
+}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyfoot[C]{\thepage}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{hyperref}
+
+\begin{document}
+	\pagestyle{fancy}
+	
+    \section*{10.1 Byzantine randomized consensus}
+    \begin{enumerate}[a)]
+        \item \textsc{Optimal resilience for Byzantine consensus:}
+        Assume $N = 4$ and $f = 1$, with processes $p_1$ to $p_4$, where $p_1$ is faulty.
+        Furthermore assume that $p_2$ proposed $0$, $p_3$ and $p_4$ proposed $1$.
+        Lastly assume, that the messages a process sends to itself, are always delayed, such that they are not used for deciding.
+        In round 1, $p_3$ might have received  $0$ from $p_1$ and $p_2$ and $1$ from $p_4$, thus $m = 2$, and $v* = 0$, if $coin$ happens to be $0$, then $p_3$ will decide $0$.
+        In order to not violate the \textsc{Agreement} Property, $p_2$ and $p_4$ would have to decide $0$ aswell.\\
+        $p_4$ might have received $0$ from $p_2$, and $1$ from $p_1$ and $p_3$ in round 1, thus $m = 2$ and $v* = 1$, if $coin$ happens to be $1$, then $p_4$ will decide $1$.
+        In this scenario $p_3$ and $p_4$ therefor decide differently, which is clearly violating the \textsc{Agreement} Property mentioned before.
+        This proofs, that this algorithm does not achieve a fault tolerance of $N > 3f$.
+
+        \item \textsc{Guru resilience:}
+        Assume $N = 5$, $f = 1$, $O = 3$ and $G = 2$ as mentioned in the excercise.
+        We have processes $p_1$ to $p_5$, where $p_1$ is the faulty process.
+        A process must receive $4$ \textsc{Vote} messages, in order to try to make a decision. 
+        Assume, that $p_2$ and $p_3$ have proposed $0$, and $p_4$ and $p_5$ have proposed $1$.
+        Further assume, that the messages a process sends to itself, are always delayed, such that they are not used for deciding.
+        If $p_2$ has received $0$ from $p_3$ and $1$ from the other three processes, then it is able to decide $1$, if $coin$ equals $1$.
+        If $p_5$ has received $0$ from $p_1$ to $p_3$, and $1$ from $p_4$, then it is able to decide $0$, if $coin$ equals $0$.
+        These decisions are possible, since $G = 2$ and $m = 3$ in both cases.
+        This violates the \textsc{Agreement} Property of randomized byzantine consensus.
+        Exactely as in a), this proofs, that the algorithm with given parameters does not achieve a fault tolerance of $N > 4f$.
+
+        \item \textsc{Actual resilience of Gurucoin:}
+        In order to be able to violate the \textsc{Agreement Property}, following scenario has to be possible:
+        from the correct $N - f$ processes, $\lceil  \frac{N - f}{2} \rceil$ propose $0$, the other $\lfloor \frac{N - f}{2} \rfloor$ propose $1$.
+        One correct process receives \textsc{[Vote, r, 0]} from $\lceil  \frac{N - f}{2} \rceil + f$ processes and enough \textsc{[Vote, r, 1]}, to totally receive $N - f$ messages.
+        Another correct process receives \textsc{[Vote, r, 1]} from $\lfloor  \frac{N - f}{2} \rfloor + f$ processes and enough \textsc{[Vote, r, 0]}, to totally receive $N - f$ messages.
+        The two processes now can only decide, if $m \geq G$, thus following has to be satisfied:\\
+        $\lceil  \frac{N - f}{2} \rceil + f \geq N - 3f$\\
+        $\lfloor  \frac{N - f}{2} \rfloor + f \geq N - 3f$\\
+        The second inequality is stronger, and we have $N = kf + 1$, thus:\\
+        $\lfloor  \frac{kf + 1 - f}{2} \rfloor + f \geq kf + 1 - 3f$\\
+        $\lfloor  \frac{(k + 1)f + 1}{2} \rfloor \geq (k - 3)f + 1$\\
+
+        $N = 9f + 1$, $G = N - 3f = 6f + 1$
+        
+    \end{enumerate}
+    
+    
+\end{document}s
