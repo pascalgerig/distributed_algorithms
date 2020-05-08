@@ -60,19 +60,41 @@
         Exactely as in a), this proofs, that the algorithm with given parameters does not achieve a fault tolerance of $N > 4f$.
 
         \item \textsc{Actual resilience of Gurucoin:}
-        In order to be able to violate the \textsc{Agreement Property}, following scenario has to be possible:
+        In order to be able to violate the \textsc{Agreement} Property, following scenario has to be possible:
         from the correct $N - f$ processes, $\lceil  \frac{N - f}{2} \rceil$ propose $0$, the other $\lfloor \frac{N - f}{2} \rfloor$ propose $1$.
         One correct process receives \textsc{[Vote, r, 0]} from $\lceil  \frac{N - f}{2} \rceil + f$ processes and enough \textsc{[Vote, r, 1]}, to totally receive $N - f$ messages.
         Another correct process receives \textsc{[Vote, r, 1]} from $\lfloor  \frac{N - f}{2} \rfloor + f$ processes and enough \textsc{[Vote, r, 0]}, to totally receive $N - f$ messages.
-        The two processes now can only decide, if $m \geq G$, thus following has to be satisfied:\\
-        $\lceil  \frac{N - f}{2} \rceil + f \geq N - 3f$\\
-        $\lfloor  \frac{N - f}{2} \rfloor + f \geq N - 3f$\\
-        The second inequality is stronger, and we have $N = kf + 1$, thus:\\
-        $\lfloor  \frac{kf + 1 - f}{2} \rfloor + f \geq kf + 1 - 3f$\\
-        $\lfloor  \frac{(k + 1)f + 1}{2} \rfloor \geq (k - 3)f + 1$\\
-
-        $N = 9f + 1$, $G = N - 3f = 6f + 1$
+        The two processes now can only decide, if $m \geq G$, thus if\\
         
+        $\lceil  \frac{N - f}{2} \rceil + f < N - 3f$\\
+        
+        then it's not possible, that two processes decide differently. Knowing that $N = kf + 1$, we get\\
+
+        $\lceil  \frac{(k - 1)f + 1}{2} \rceil + f < (k - 3)f + 1$, $k > 4$ (from b)\\
+
+        The smallest k, to satisfy this inequality for all Natural Numbers f, is $k = 9$: \\
+        
+        \underline{k = 7}:\\
+        $\lceil  \frac{6f + 1}{2} \rceil + f = 4f + 1 < 4f + 1$ is clearly wrong\\
+        
+        \underline{k = 8}:\\
+        $\lceil  \frac{7f + 1}{2} \rceil + f < 4f + 1$ does not hold, since\\
+
+        $\lceil  \frac{7f + 1}{2} \rceil \geq \lceil  \frac{6f + 1}{2} \rceil$ (The right part comes from the step before)
+
+        \underline{k = 9}:\\
+        $\lceil  \frac{8f + 1}{2} \rceil + f = 5f + 1 < 6f + 1$\\
+
+        $k < 7$ gives similar errors as $k = 7$ and $k = 8$
+
+        Since $\lceil  \frac{(k - 1)f + 1}{2} \rceil + f$ grows slower than $(k - 3)f + 1$, $k > 4$ the \textsc{Agreement} Property must hold, for all $k > 9$
+
+        The other properties clearly hold for all $k > 9$:\\
+        \textsc{Probabilistic termination:} Clearly the algorithm will eventually terminate with a probability of 1
+
+        \textsc{Strong validity:} If all processes propose the same value, then $m \geq G$, thus all correct processes will decide this value.
+
+        \textsc{Integrity:} since the value $decided$ is set to $true$ once a decision is made, a correct process can clearly decide no more than once.
     \end{enumerate}
     
     
