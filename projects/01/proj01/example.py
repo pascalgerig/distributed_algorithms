@@ -32,8 +32,8 @@ def read(k, EPT):
 
 def main():
     k, v1, v2 = 'k', '1', '2'
-    write(k, v, EPT1)
-    write(k, v, EPT2)
+    write(k, v1, EPT1)
+    write(k, v2, EPT2)
     read(k, EPT1)
     read(k, EPT2)
     read(k, EPT3)
